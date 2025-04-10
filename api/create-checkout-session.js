@@ -17,11 +17,11 @@ export default async function handler(req, res) {
   req.on("data", chunk => (raw += chunk));
   req.on("end", async () => {
     try {
-      const { items } = JSON.parse(raw);
+      const { cart } = JSON.parse(raw); // FIXED: renamed from items to cart
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
-        line_items: items,
+        line_items: cart,
         success_url: "https://studio-916.com/success",
         cancel_url: "https://studio-916.com/cancel",
       });
@@ -33,4 +33,3 @@ export default async function handler(req, res) {
     }
   });
 }
-
