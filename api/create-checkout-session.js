@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
-          price: "price_123456789", // replace with your real Price ID
+          price: "price_1QrlyXG8YammCMKoDwdlz0A6", // replace with your real Price ID
           quantity: 1,
         },
       ],
