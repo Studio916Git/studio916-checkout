@@ -51,7 +51,7 @@ export default async function handler(req, res) {
         payment_method_types: ["card"],
         line_items: items,
         success_url: "https://studio-916.com/success",
-        cancel_url: "https://studio-916.com/cancel",
+        cancel_url: "https://studio-916.com/renewproductpage",
       });
   
       console.log("✅ Stripe session created:", session.id);
