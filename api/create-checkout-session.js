@@ -45,13 +45,18 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "No items provided" });
       }
   
-      console.log("💳 Creating Stripe checkout session...");
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
         line_items: items,
         success_url: "https://studio-916.com/success",
         cancel_url: "https://studio-916.com/renewproductpage",
+      
+        // 💡 These two lines add address collection:
+        shipping_address_collection: {
+          allowed_countries: ['US'],
+        },
+        billing_address_collection: 'required',
       });
   
       console.log("✅ Stripe session created:", session.id);
