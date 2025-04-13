@@ -49,8 +49,8 @@ export default async function handler(req, res) {
         mode: "payment",
         payment_method_types: ["card"],
         line_items: items,
-        success_url: "https://studio-916.com/success",
-        cancel_url: "https://studio-916.com/renewproductpage",
+        success_url: "https://studio-916.com/thankyou",
+        cancel_url: "https://studio-916.com/stickers",
       
         // 💡 These two lines add address collection:
         shipping_address_collection: {
