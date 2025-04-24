@@ -50,8 +50,7 @@ export default async function handler(req, res) {
         payment_method_types: ["card"],
         line_items: items,
         success_url: "https://studio-916.com/thankyou",
-        cancel_url: "https://studio-916.com/stickers",
-      
+        cancel_url: parsed.cancel_url || "https://studio-916.com/stickers",      
         // 💡 These two lines add address collection:
         shipping_address_collection: {
           allowed_countries: ['US'],
