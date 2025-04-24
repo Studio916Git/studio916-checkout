@@ -116,6 +116,7 @@ export default function StickerOrderForm() {
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 12px center",
         backgroundSize: "16px 16px",
+        color: "#aaa", // Default placeholder color
     }
 
     const halfInputStyle = {
@@ -320,6 +321,25 @@ export default function StickerOrderForm() {
                 return
             }
 
+            // Send notification email (independent of Stripe)
+            const emailResponse = await fetch("/api/send-confirmation-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    to: "gian@studio-916.com",
+                    subject: "New Sticker Order Submitted",
+                    text: `A new sticker order has been submitted.\n\nShape: ${shape}\nType: ${type}\nSize: ${size}\nQuantity: ${quantity}\nDesigns: ${designs}\nQuote: ${calculateQuote()}`,
+                }),
+            })
+
+            if (!emailResponse.ok) {
+                console.error("Email failed to send:", await emailResponse.text())
+            } else {
+                console.log("Email sent successfully.")
+            }
+
             // Step 4: Start Stripe checkout
             const amount = parseFloat(calculateQuote().replace("$", "")) * 100
 
@@ -379,7 +399,10 @@ export default function StickerOrderForm() {
             <label style={labelStyle}>
                 Sticker Shape
                 <select
-                    style={selectInputStyle}
+                    style={{
+                        ...selectInputStyle,
+                        color: shape === "" ? "#aaa" : "#111"
+                    }}
                     value={shape}
                     onChange={(e) => {
                         const newShape = e.target.value
@@ -400,7 +423,10 @@ export default function StickerOrderForm() {
             <label style={labelStyle}>
                 Sticker Type
                 <select
-                    style={selectInputStyle}
+                    style={{
+                        ...selectInputStyle,
+                        color: type === "" ? "#aaa" : "#111"
+                    }}
                     value={type}
                     onChange={(e) => {
                         const newType = e.target.value
@@ -420,7 +446,10 @@ export default function StickerOrderForm() {
             <label style={labelStyle}>
                 Sticker Size
                 <select
-                    style={selectInputStyle}
+                    style={{
+                        ...selectInputStyle,
+                        color: size === "" ? "#aaa" : "#111"
+                    }}
                     value={size}
                     onChange={(e) => {
                         const newSize = e.target.value
@@ -480,7 +509,10 @@ export default function StickerOrderForm() {
             <label style={labelStyle}>
                 Quantity
                 <select
-                    style={selectInputStyle}
+                    style={{
+                        ...selectInputStyle,
+                        color: quantity === "" ? "#aaa" : "#111"
+                    }}
                     value={quantity}
                     onChange={(e) => {
                         const newQuantity = e.target.value
