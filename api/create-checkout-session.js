@@ -21,21 +21,8 @@ export default async function handler(req, res) {
   
     try {
       console.log("🔄 Reading request body...");
-      const buffers = [];
-      for await (const chunk of req) {
-        buffers.push(chunk);
-      }
-      const rawBody = Buffer.concat(buffers).toString("utf8");
-      console.log("🧾 Raw body received:", rawBody);
-  
-      let parsed;
-      try {
-        parsed = JSON.parse(rawBody);
-        console.log("✅ Parsed JSON body:", parsed);
-      } catch (jsonErr) {
-        console.error("❌ Failed to parse JSON:", jsonErr.message);
-        return res.status(400).json({ error: "Invalid JSON body" });
-      }
+      const parsed = req.body;
+      console.log("✅ Parsed JSON body:", parsed);
   
       const { items } = parsed;
       console.log("📦 Extracted items:", items);
@@ -66,3 +53,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: err.message || "Checkout session failed." });
     }
   }
+
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+}
