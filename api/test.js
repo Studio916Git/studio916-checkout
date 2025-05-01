@@ -73,8 +73,6 @@ export default function StickerOrderForm() {
                         onChange={(e) =>
                             handleDesignFileChange(i, e.target.files[0])
                         }
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
                     />
                 </div>
             )
@@ -87,24 +85,24 @@ export default function StickerOrderForm() {
         fontWeight: 500,
         marginBottom: 6,
         display: "block",
-        color: "#111",
+        color: "#ffffff",
     }
 
     const inputStyle = {
         fontFamily: "'Switzer', sans-serif",
-        fontSize: "15px",
-        padding: "12px",
-        borderRadius: "8px",
-        border: "1px solid #ccc",
+        fontSize: "16px",
+        padding: "14px 16px",
+        borderRadius: "10px",
+        border: "1px solid rgba(255, 255, 255, 0.2)",
         width: "100%",
-        minHeight: "48px",
+        minHeight: "50px",
         outline: "none",
-        transition: "all 0.2s ease",
-        backgroundColor: "#ffffff",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+        transition: "all 0.3s ease",
+        backgroundColor: "rgba(255, 255, 255, 0.03)",
+        color: "#ffffff",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
     }
 
-    // Add select-specific styles for dropdown arrow and hiding default appearance
     const selectInputStyle = {
         ...inputStyle,
         appearance: "none",
@@ -112,11 +110,10 @@ export default function StickerOrderForm() {
         MozAppearance: "none",
         paddingRight: "36px",
         backgroundImage:
-            "url('data:image/svg+xml;utf8,<svg fill=\\'%23000\\' height=\\'24\\' viewBox=\\'0 0 24 24\\' width=\\'24\\' xmlns=\\'http://www.w3.org/2000/svg\\'><path d=\\'M7 10l5 5 5-5z\\'/></svg>')",
+            "url('data:image/svg+xml;utf8,<svg fill=\\'%23fff\\' height=\\'24\\' viewBox=\\'0 0 24 24\\' width=\\'24\\' xmlns=\\'http://www.w3.org/2000/svg\\'><path d=\\'M7 10l5 5 5-5z\\'/></svg>')",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 12px center",
         backgroundSize: "16px 16px",
-        color: "#aaa", // Default placeholder color
     }
 
     const halfInputStyle = {
@@ -124,15 +121,29 @@ export default function StickerOrderForm() {
         width: "100%",
     }
 
-    const handleFocus = (e) => {
-        e.target.style.border = "1px solid #2563eb"
-        e.target.style.boxShadow = "0 0 0 2px rgba(37, 99, 235, 0.25)"
+    const quantityOptions = [250, 500, 1000, 2000, 3000, 5000, 7500, 10000]
+
+    const quantityGridStyle = {
+        display: "grid",
+        gap: "8px",
+        gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))",
+        marginTop: "6px",
+        marginBottom: "6px",
     }
 
-    const handleBlur = (e) => {
-        e.target.style.border = "1px solid #ccc"
-        e.target.style.boxShadow = "none"
+    const quantityButtonStyle = {
+        fontFamily: "'Switzer', sans-serif",
+        fontSize: "14px",
+        padding: "10px",
+        borderRadius: "8px",
+        border: "1px solid rgba(255,255,255,0.2)",
+        backgroundColor: "rgba(255,255,255,0.03)",
+        color: "#fff",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
     }
+
+    // Removed handleFocus and handleBlur for a cleaner modern look
 
     const containerStyle = {
         maxWidth: 600,
@@ -141,28 +152,34 @@ export default function StickerOrderForm() {
         padding: 40,
         display: "flex",
         flexDirection: "column",
-        gap: 20,
-        background: "#ffffff",
-        borderRadius: 20,
-        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.05)",
+        gap: 24,
+        background: "rgba(30, 30, 30, 0.65)",
+        borderRadius: 24,
+        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.4)",
+        border: "1px solid rgba(255, 255, 255, 0.15)",
+        backdropFilter: "blur(60px)",
+        WebkitBackdropFilter: "blur(60px)",
     }
 
     const getSizeCost = () => {
-        if (size === "2x2" || size === "2.91x2.91") return 30
-        if (size === "3x3") return 35
-        if (size === "4x4" || size === "5x2" || size === "2.91x4.12") return 55
-        if (size === "5x5") return 65
+        let width, height
+
         if (size === "custom" && customWidth && customHeight) {
-            const area = parseFloat(customWidth) * parseFloat(customHeight)
-            if (isNaN(area)) return 45
-            if (area <= 9) return 35
-            if (area <= 16) return 55
-            return 65
+            width = parseFloat(customWidth)
+            height = parseFloat(customHeight)
+        } else if (size && size.includes("x")) {
+            ;[width, height] = size.split("x").map(Number)
         }
-        return 45
+
+        if (!width || !height || isNaN(width) || isNaN(height)) return 0
+        if (width < 1 || height < 1 || width > 10 || height > 10) return 0
+
+        const area = width * height
+        const baseCostPer250 = 40 + area * 2.25
+        return Math.round(baseCostPer250)
     }
 
-    const getMarkup = () => 2.8
+    const getMarkup = () => 1.65
 
     const getQuantityCount = () => {
         if (quantity === "custom") return parseInt(customQuantity || "0")
@@ -190,17 +207,32 @@ export default function StickerOrderForm() {
         const baseCost = getSizeCost()
         const count = getQuantityCount()
         if (!count || isNaN(count)) return "-"
-        const units = count / 250
-        const stickerCost = baseCost * units
+        const costPer250 = baseCost || 100
+        const units = Math.pow(count / 250, 0.75)
+        const stickerCost = costPer250 * units
         const packagingCost =
             packaging && isPackagingAllowed() ? count * 0.2 : 0
-        const quote = stickerCost * getMarkup() + packagingCost
+        const rawTotal = stickerCost + packagingCost
+        let typeMultiplier = 1
+        if (type === "holographic") typeMultiplier = 1.15
+        if (type === "spot-uv") typeMultiplier = 1.25
+        const adjustedTotal = rawTotal * typeMultiplier
+        const marginMultiplier = 1.65
+        const quote = adjustedTotal * marginMultiplier
+
         return `$${quote.toFixed(2)}`
     }
 
     const isFormComplete = () => {
         const hasBasic = shape && type && size && quantity
-        const hasCustomSize = size !== "custom" || (customWidth && customHeight)
+        const hasCustomSize =
+            size !== "custom" ||
+            (customWidth &&
+                customHeight &&
+                parseFloat(customWidth) >= 1 &&
+                parseFloat(customHeight) >= 1 &&
+                parseFloat(customWidth) <= 10 &&
+                parseFloat(customHeight) <= 10)
         const hasCustomQty = quantity !== "custom" || customQuantity
         const meetsMOQ = getQuantityCount() >= 250
         const designLimit = getQuantityCount() / 250
@@ -221,40 +253,54 @@ export default function StickerOrderForm() {
     }
 
     {
-        getQuantityCount() >= 250 && (
-            <label style={labelStyle}>
-                Number of Designs
-                <input
-                    type="number"
-                    min={1}
-                    max={Math.floor(getQuantityCount() / 250)}
-                    value={designs}
-                    onChange={(e) => {
-                        setDesigns(Number(e.target.value))
-                        saveToLocalStorage({ designs: Number(e.target.value) })
-                    }}
-                    style={inputStyle}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                />
-                <span style={{ fontSize: "12px", color: "#555" }}>
-                    You can split your order — 250 stickers per design.
-                </span>
-                {designs > Math.floor(getQuantityCount() / 250) && (
-                    <div
-                        style={{
-                            color: "#e11d48",
-                            fontSize: "14px",
-                            marginTop: 4,
-                        }}
-                    >
-                        You can only split into{" "}
-                        {Math.floor(getQuantityCount() / 250)} designs.
-                    </div>
-                )}
-            </label>
+        (size === "custom" &&
+            (parseFloat(customWidth) < 1 ||
+                parseFloat(customHeight) < 1 ||
+                parseFloat(customWidth) > 10 ||
+                parseFloat(customHeight) > 10)) && (
+            <div
+                style={{
+                    color: "#e11d48",
+                    fontSize: "14px",
+                    marginBottom: "8px",
+                }}
+            >
+                Custom sizes must be at least 1&quot;×1&quot; and no larger than
+                10&quot;×10&quot;.
+            </div>
         )
     }
+    <label style={labelStyle}>
+        Number of Designs
+        <input
+            type="number"
+            min={1}
+            max={Math.floor(getQuantityCount() / 250)}
+            value={designs}
+            onChange={(e) => {
+                setDesigns(Number(e.target.value))
+                saveToLocalStorage({
+                    designs: Number(e.target.value),
+                })
+            }}
+            style={inputStyle}
+        />
+        <span style={{ fontSize: "12px", color: "#555" }}>
+            You can split your order — 250 stickers per design.
+        </span>
+        {designs > Math.floor(getQuantityCount() / 250) && (
+            <div
+                style={{
+                    color: "#e11d48",
+                    fontSize: "14px",
+                    marginTop: 4,
+                }}
+            >
+                You can only split into{" "}
+                {Math.floor(getQuantityCount() / 250)} designs.
+            </div>
+        )}
+    </label>
 
     const uploadFileToUploadcare = async (file) => {
         const formData = new FormData()
@@ -335,7 +381,10 @@ export default function StickerOrderForm() {
             })
 
             if (!emailResponse.ok) {
-                console.error("Email failed to send:", await emailResponse.text())
+                console.error(
+                    "Email failed to send:",
+                    await emailResponse.text()
+                )
             } else {
                 console.log("Email sent successfully.")
             }
@@ -389,19 +438,24 @@ export default function StickerOrderForm() {
         }
     }
 
+    const dynamicContainerStyle = {
+        ...containerStyle,
+    }
+
     return (
         <motion.div
-            style={containerStyle}
+            style={dynamicContainerStyle}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
+            tabIndex={-1}
         >
             <label style={labelStyle}>
                 Sticker Shape
                 <select
                     style={{
                         ...selectInputStyle,
-                        color: shape === "" ? "#aaa" : "#111"
+                        color: shape === "" ? "#aaa" : "#fff",
                     }}
                     value={shape}
                     onChange={(e) => {
@@ -409,8 +463,6 @@ export default function StickerOrderForm() {
                         setShape(newShape)
                         saveToLocalStorage({ shape: newShape })
                     }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
                 >
                     <option value="">Select shape</option>
                     <option value="circle">Circle</option>
@@ -425,7 +477,7 @@ export default function StickerOrderForm() {
                 <select
                     style={{
                         ...selectInputStyle,
-                        color: type === "" ? "#aaa" : "#111"
+                        color: type === "" ? "#aaa" : "#fff",
                     }}
                     value={type}
                     onChange={(e) => {
@@ -433,13 +485,12 @@ export default function StickerOrderForm() {
                         setType(newType)
                         saveToLocalStorage({ type: newType })
                     }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
                 >
                     <option value="">Select type</option>
-                    <option value="vinyl-matte">Vinyl Matte</option>
-                    <option value="spot-uv">Spot UV Luxe</option>
+                    <option value="vinyl-matte">Matte</option>
+                    <option value="vinyl-glossy">Glossy</option>
                     <option value="holographic">Holographic</option>
+                    <option value="spot-uv">Spot UV</option>
                 </select>
             </label>
 
@@ -448,7 +499,7 @@ export default function StickerOrderForm() {
                 <select
                     style={{
                         ...selectInputStyle,
-                        color: size === "" ? "#aaa" : "#111"
+                        color: size === "" ? "#aaa" : "#fff",
                     }}
                     value={size}
                     onChange={(e) => {
@@ -456,8 +507,6 @@ export default function StickerOrderForm() {
                         setSize(newSize)
                         saveToLocalStorage({ size: newSize })
                     }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
                 >
                     <option value="">Select size</option>
                     <option value="2x2">2x2"</option>
@@ -473,11 +522,9 @@ export default function StickerOrderForm() {
 
             <div
                 style={{
-                    display: "flex",
+                    display: size === "custom" ? "flex" : "none",
                     gap: "4%",
-                    visibility: size === "custom" ? "visible" : "hidden",
-                    height: size === "custom" ? "auto" : 0,
-                    marginBottom: size === "custom" ? 0 : -20,
+                    marginBottom: 0,
                 }}
             >
                 <input
@@ -489,8 +536,6 @@ export default function StickerOrderForm() {
                         setCustomWidth(e.target.value)
                         saveToLocalStorage({ customWidth: e.target.value })
                     }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
                 />
                 <input
                     style={halfInputStyle}
@@ -501,33 +546,70 @@ export default function StickerOrderForm() {
                         setCustomHeight(e.target.value)
                         saveToLocalStorage({ customHeight: e.target.value })
                     }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
                 />
             </div>
-
+            {size === "custom" &&
+              (parseFloat(customWidth) < 1 ||
+                parseFloat(customHeight) < 1 ||
+                parseFloat(customWidth) > 10 ||
+                parseFloat(customHeight) > 10) && (
+                <div
+                  style={{
+                    color: "#e11d48",
+                    fontSize: "14px",
+                    marginTop: "4px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Custom sizes must be at least 1"×1" and no larger than 10"×10".
+                </div>
+            )}
             <label style={labelStyle}>
                 Quantity
-                <select
-                    style={{
-                        ...selectInputStyle,
-                        color: quantity === "" ? "#aaa" : "#111"
-                    }}
-                    value={quantity}
-                    onChange={(e) => {
-                        const newQuantity = e.target.value
-                        setQuantity(newQuantity)
-                        saveToLocalStorage({ quantity: newQuantity })
-                    }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                >
-                    <option value="">Select quantity</option>
-                    <option value="250">250</option>
-                    <option value="500">500</option>
-                    <option value="1000">1000</option>
-                    <option value="custom">Custom</option>
-                </select>
+                <div style={quantityGridStyle}>
+                    {quantityOptions.map((q) => (
+                        <button
+                            key={q}
+                            style={{
+                                ...quantityButtonStyle,
+                                borderColor:
+                                    quantity === q.toString()
+                                        ? "#009DFF"
+                                        : "rgba(255,255,255,0.2)",
+                                backgroundColor:
+                                    quantity === q.toString()
+                                        ? "rgba(0,157,255,0.15)"
+                                        : "rgba(255,255,255,0.03)",
+                            }}
+                            onClick={() => {
+                                setQuantity(q.toString())
+                                saveToLocalStorage({ quantity: q.toString() })
+                            }}
+                        >
+                            {q.toLocaleString()}
+                        </button>
+                    ))}
+
+                    <button
+                        style={{
+                            ...quantityButtonStyle,
+                            borderColor:
+                                quantity === "custom"
+                                    ? "#009DFF"
+                                    : "rgba(255,255,255,0.2)",
+                            backgroundColor:
+                                quantity === "custom"
+                                    ? "rgba(0,157,255,0.15)"
+                                    : "rgba(255,255,255,0.03)",
+                        }}
+                        onClick={() => {
+                            setQuantity("custom")
+                            saveToLocalStorage({ quantity: "custom" })
+                        }}
+                    >
+                        Custom
+                    </button>
+                </div>
                 {quantity === "custom" && (
                     <input
                         style={inputStyle}
@@ -540,8 +622,6 @@ export default function StickerOrderForm() {
                                 customQuantity: e.target.value,
                             })
                         }}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
                     />
                 )}
             </label>
@@ -555,15 +635,12 @@ export default function StickerOrderForm() {
                         ...inputStyle,
                         padding: "10px 14px",
                         fontSize: "15px",
-                        backgroundColor: "#fff",
                     }}
                     onChange={(e) => {
                         const file = e.target.files[0]
                         setDesignFiles([file])
                         saveToLocalStorage({ designFiles: [file] })
                     }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
                 />
                 <span
                     style={{
@@ -622,7 +699,7 @@ export default function StickerOrderForm() {
                     fontFamily: "'Switzer', sans-serif",
                     fontSize: "18px",
                     fontWeight: 600,
-                    color: "#111",
+                    color: "#ffffff",
                 }}
             >
                 Estimated Quote: {calculateQuote()}

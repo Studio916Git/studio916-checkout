@@ -26,6 +26,30 @@ export default async function handler(req, res) {
   
       const { items } = parsed;
       console.log("📦 Extracted items:", items);
+
+      // Sort items by price ascending to find the cheapest
+      const sortedItems = [...items].sort((a, b) => {
+        const priceA = a.price_data.unit_amount;
+        const priceB = b.price_data.unit_amount;
+        return priceA - priceB;
+      });
+
+      // If 4 or more items, discount the cheapest one
+      const updatedItems = sortedItems.length >= 4
+        ? sortedItems.map((item, index) => {
+            if (index === 0) {
+              // Clone and override the price to 0
+              return {
+                ...item,
+                price_data: {
+                  ...item.price_data,
+                  unit_amount: 0,
+                },
+              };
+            }
+            return item;
+          })
+        : items;
   
       if (!items || !Array.isArray(items) || items.length === 0) {
         console.error("❌ No items provided or invalid format");
@@ -35,7 +59,7 @@ export default async function handler(req, res) {
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
-        line_items: items,
+        line_items: updatedItems,
         success_url: "https://studio-916.com/thankyou",
         cancel_url: parsed.cancel_url || "https://studio-916.com/stickers",      
         // 💡 These two lines add address collection:
