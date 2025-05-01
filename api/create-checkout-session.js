@@ -27,18 +27,20 @@ export default async function handler(req, res) {
       const { items } = parsed;
       console.log("📦 Extracted items:", items);
 
-      // Sort items by price ascending to find the cheapest
-      const sortedItems = [...items].sort((a, b) => {
-        const priceA = a.price_data.unit_amount;
-        const priceB = b.price_data.unit_amount;
-        return priceA - priceB;
-      });
+      // Only apply discount if items have custom price_data (not price IDs)
+      const isCustomPricing = items.every(item => item.price_data?.unit_amount != null);
 
-      // If 4 or more items, discount the cheapest one
-      const updatedItems = sortedItems.length >= 4
+      const sortedItems = isCustomPricing
+        ? [...items].sort((a, b) => {
+            const priceA = a.price_data.unit_amount;
+            const priceB = b.price_data.unit_amount;
+            return priceA - priceB;
+          })
+        : items;
+
+      const updatedItems = isCustomPricing && sortedItems.length >= 4
         ? sortedItems.map((item, index) => {
             if (index === 0) {
-              // Clone and override the price to 0
               return {
                 ...item,
                 price_data: {
