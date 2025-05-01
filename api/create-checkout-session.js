@@ -27,31 +27,52 @@ export default async function handler(req, res) {
       const { items } = parsed;
       console.log("📦 Extracted items:", items);
 
-      // Only apply discount if items have custom price_data (not price IDs)
-      const isCustomPricing = items.every(item => item.price_data?.unit_amount != null);
+      // Fetch price details from Stripe and build price_data-based line items
+      const prices = await Promise.all(
+        items.map(async (item) => {
+          const stripePrice = await stripe.prices.retrieve(item.price);
+          return {
+            originalItem: item,
+            price_data: {
+              currency: stripePrice.currency,
+              unit_amount: stripePrice.unit_amount,
+              product: stripePrice.product,
+            },
+            quantity: item.quantity || 1,
+          };
+        })
+      );
 
-      const sortedItems = isCustomPricing
-        ? [...items].sort((a, b) => {
-            const priceA = a.price_data.unit_amount;
-            const priceB = b.price_data.unit_amount;
-            return priceA - priceB;
-          })
-        : items;
+      // Expand into individual quantities for sorting
+      const expanded = prices.flatMap((item) =>
+        Array(item.quantity).fill({
+          price_data: item.price_data,
+        })
+      );
 
-      const updatedItems = isCustomPricing && sortedItems.length >= 4
-        ? sortedItems.map((item, index) => {
-            if (index === 0) {
+      // Apply discount to the cheapest one if 4 or more items
+      const updatedItems = expanded.length >= 4
+        ? expanded
+            .sort((a, b) => a.price_data.unit_amount - b.price_data.unit_amount)
+            .map((item, index) => {
+              if (index === 0) {
+                return {
+                  price_data: {
+                    ...item.price_data,
+                    unit_amount: 0,
+                  },
+                  quantity: 1,
+                };
+              }
               return {
-                ...item,
-                price_data: {
-                  ...item.price_data,
-                  unit_amount: 0,
-                },
+                price_data: item.price_data,
+                quantity: 1,
               };
-            }
-            return item;
-          })
-        : items;
+            })
+        : expanded.map((item) => ({
+            price_data: item.price_data,
+            quantity: 1,
+          }));
   
       if (!items || !Array.isArray(items) || items.length === 0) {
         console.error("❌ No items provided or invalid format");
